@@ -18,7 +18,7 @@ if (!code) {
 
         const tracksData = await searchTracks(query, accessToken);
         const tracks = tracksData.tracks.items;
-        console.log(tracks)
+        
         displayTracks(tracks);
     });
 
