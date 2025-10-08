@@ -1,4 +1,4 @@
-const clientId = "57b231f0b27d4ff586ae16656a54598b";
+const clientId = "";
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
@@ -18,7 +18,7 @@ if (!code) {
 
         const tracksData = await searchTracks(query, accessToken);
         const tracks = tracksData.tracks.items;
-        
+
         displayTracks(tracks);
     });
 
