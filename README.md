@@ -11,6 +11,7 @@ Sur ce site, vous avez la possibilité de visualiser les informations relatifs �
 
 ## Architecture des fichiers
 
+```text
 POC_API_SPOTIFY
  ┣ 📂 public
  ┃ ┗ 📜 index.html                # Point d’entrée de l’application
@@ -24,6 +25,7 @@ POC_API_SPOTIFY
  ┣ 📜 vite.config.js              # Configuration du bundler Vite
  ┣ 📜 .gitignore                  # Fichiers et dossiers ignorés par Git
  ┗ 📜 README.md                   # Documentation du projet
+```
 
 ## Guide d'installation
 
