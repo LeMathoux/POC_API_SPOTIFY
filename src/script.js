@@ -1,7 +1,13 @@
-const clientId = "";
+const clientId = ""; /** Inserez ici votre identifiant */
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
+/**
+ * Cette partition permet le traitement des données.
+ * Si l'utilisateur n'est pas connecté, il redirige vers la page de spotify pour l'autoristion d'acces aux données du compte.
+ * S'il existe un token dans le local storage, il utilise celui-ci.
+ * Sinon il le recupere via l'api spotify grace aux client_id et au code.
+ */
 if (!code) {
     redirectToAuthCodeFlow(clientId);
 } else {
@@ -11,6 +17,9 @@ if (!code) {
         accessToken = await getAccessToken(clientId, code);
     }
 
+    /**
+     * Cette partie permet lors de l'envoie du formulaire de recuperer et afficher les musiques.
+     */
     document.getElementById("search-form").addEventListener("submit", async (event) => {
         event.preventDefault();
 
@@ -22,6 +31,9 @@ if (!code) {
         displayTracks(tracks);
     });
 
+    /**
+     * Cette partie permet de traiter les informations de l'utilisateuur et de les afficher.
+     */
     const profile = await fetchProfile(accessToken);
     const folowedArtistsData = await fetchFollowedArtist(accessToken);
     const folowedArtists = folowedArtistsData.artists.items;
@@ -29,6 +41,12 @@ if (!code) {
     populateUI(profile);
 }
 
+/**
+ * Cette fonction permet via l'api de spotify de verifier si l'utilisateur peut acceder à la plateforme.
+ * Elle redirige vers le site spotify pour demander à l'utilisateur l'autorisation d'acces aux données de
+ * son compte.
+ * @param {string} clientId - l'identifiant de l'utilisateur
+ */
 export async function redirectToAuthCodeFlow(clientId) {
     const verifier = generateCodeVerifier(128);
     const challenge = await generateCodeChallenge(verifier);
@@ -46,6 +64,11 @@ export async function redirectToAuthCodeFlow(clientId) {
     document.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
+/**
+ * Cette fonction permet de generer le code verifier utilisée pour la sécurisation du flux des information entre l'api et le client.
+ * @param {number} length - longueur du code à génerer
+ * @returns 
+ */
 function generateCodeVerifier(length) {
     let text = '';
     let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -56,6 +79,11 @@ function generateCodeVerifier(length) {
     return text;
 }
 
+/**
+ * Cette fonction permet de generer le code.
+ * @param {string} codeVerifier - code géneré Aleatoirement par la plateforme
+ * @returns 
+ */
 async function generateCodeChallenge(codeVerifier) {
     const data = new TextEncoder().encode(codeVerifier);
     const digest = await window.crypto.subtle.digest('SHA-256', data);
@@ -64,7 +92,12 @@ async function generateCodeChallenge(codeVerifier) {
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 }
-
+/**
+ * Cette fonction permet de gerer le stokage du token de l'utilisateur afin d'eviter la reconnexion
+ * au chargement de la page. Si la date du token expire l'utilisateur sera rediriger vers la page de
+ * connexion.
+ * @returns 
+ */
 export function getStoredAccessToken() {
     const token = localStorage.getItem("access_token");
     const expiresAt = localStorage.getItem("token_expires_at");
@@ -79,6 +112,13 @@ export function getStoredAccessToken() {
     return token;
 }
 
+/**
+ * Cette fonction permet via l'api spotify de recuperer le token pour acceder aux informations
+ * de l'utilisateur.
+ * @param {string} clientId - identifiant de l'utilisateur
+ * @param {string} code - code generé Aleatoirement par la plateforme
+ * @returns 
+ */
 export async function getAccessToken(clientId, code) {
     const verifier = localStorage.getItem("verifier");
 
@@ -103,6 +143,11 @@ export async function getAccessToken(clientId, code) {
     return access_token;
 }
 
+/**
+ * Cette fonction permet via l'api spotify de recuperer les informations de l'utilisateur connecté.
+ * @param {string} token - token de l'utilisateur connecté
+ * @returns 
+ */
 async function fetchProfile(token) {
     const result = await fetch("https://api.spotify.com/v1/me", {
         method: "GET", headers: { Authorization: `Bearer ${token}` }
@@ -111,6 +156,11 @@ async function fetchProfile(token) {
     return await result.json();
 }
 
+/**
+ * Cette fonction permet via l'api spotify de recuperer la liste des artistes dont l'utilisateur connecté est abonné.
+ * @param {string} token - token de l'utilisateur connecté
+ * @returns 
+ */
 async function fetchFollowedArtist(token){
     const result = await fetch("https://api.spotify.com/v1/me/following?type=artist", {
         method: "GET", headers: { Authorization: `Bearer ${token}` }
@@ -119,6 +169,13 @@ async function fetchFollowedArtist(token){
     return await result.json();
 }
 
+/**
+ * Cette fonction permet via l'api de spotify de recuperer 20 musiques grace à la saisie
+ * de l'utilisateur dans le filtre recherche.
+ * @param {string} search - Saisie du formulaire de recherche
+ * @param {string} token - token de l'utilisateur connecté
+ * @returns
+ */
 async function searchTracks(search, token){
     const result = await fetch(
         `https://api.spotify.com/v1/search?q=${encodeURIComponent(search)}&type=track&limit=20`,
@@ -131,6 +188,10 @@ async function searchTracks(search, token){
     return await result.json();
 }
 
+/**
+ * Cette fonction permet d'afficher les informations de l'utilisateur connecté.
+ * @param {Array} profile - Liste des informations du compte de l'utilisateur
+ */
 function populateUI(profile) {
     document.getElementById("displayName").innerText = profile.display_name;
     if (profile.images[0]) {
@@ -147,6 +208,10 @@ function populateUI(profile) {
     document.getElementById("url").setAttribute("href", profile.href);
 }
 
+/**
+ * Cette fonction permet d'afficher les musiques (recherchées via le filtre) sur la vue
+ * @param {Array} tracks - liste des musiques
+ */
 function displayTracks(tracks){
     const grid = document.getElementById("tracks-grid");
     grid.innerHTML = ""; 
@@ -184,6 +249,10 @@ function displayTracks(tracks){
 
 }
 
+/**
+ * Cette fonction permet d'afficher les artistes dans la vue.
+ * @param {Array} folowedArtists - liste des artistes suivis par l'utilisateur
+ */
 function displayArtists(folowedArtists){
     const grid = document.getElementById("artists-grid");
     grid.innerHTML = "";
